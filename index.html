@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>FriOlKa | Der Reise-Agent</title>
+  <meta name="theme-color" content="#1b6bb3" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRf0Xpc="
+    crossorigin=""
+  />
+  <link rel="icon" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="icons/apple-icon-180.png" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>FriOlKa | Der Reise-Agent</h1>
+    <button id="btn-refresh" title="Standort aktualisieren">🔄</button>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="nearby" class="active">In der Nähe</button>
+    <button data-tab="map">Karte</button>
+    <button data-tab="weather">Wetter</button>
+    <button data-tab="basecamps">Basecamps</button>
+    <button data-tab="import">Import</button>
+  </nav>
+
+  <main>
+    <section id="tab-nearby" class="tab active">
+      <div class="filters">
+        <label><input type="checkbox" id="f-kinderwagen" /> kinderwagentaugliche Wege</label>
+        <label><input type="checkbox" id="f-schattig" /> schattig</label>
+        <label><input type="checkbox" id="f-freistehen" /> freies Stehen</label>
+      </div>
+      <ul id="nearby-list" class="list"></ul>
+    </section>
+
+    <section id="tab-map" class="tab">
+      <div id="map" class="map"></div>
+    </section>
+
+    <section id="tab-weather" class="tab">
+      <div id="weather"></div>
+      <div id="where-next" class="where-next"></div>
+    </section>
+
+    <section id="tab-basecamps" class="tab">
+      <ul id="basecamp-list" class="list"></ul>
+    </section>
+
+    <section id="tab-import" class="tab">
+      <p>Importiere Park4Night/andere Punkte als GPX/CSV – oder füge durch <b>Einfügen</b> (Koordinaten/Link) hinzu.</p>
+      <div class="import-actions">
+        <input type="file" id="file-input" accept=".gpx,.csv,text/csv" />
+        <button id="btn-paste">Aus Zwischenablage einfügen</button>
+        <button id="btn-add-manual">Manuell hinzufügen</button>
+      </div>
+      <div id="import-msg" class="msg"></div>
+      <ul id="spot-list" class="list"></ul>
+    </section>
+  </main>
+
+  <footer class="attribution">
+    <small>© FriOlKa. Karten © OpenStreetMap-Mitwirkende. Wetter: Open‑Meteo. Inhalte: teils Wikipedia/Wikidata (CC‑BY‑SA).</small>
+  </footer>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>
