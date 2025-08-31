@@ -1,4 +1,4 @@
-const CACHE_NAME = 'friolika-v3';
+const CACHE_NAME = 'friolika-v5';
 const ASSETS = [
   'index.html', 'styles.css', 'app.js', 'sw.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-icon-180.png'
@@ -17,18 +17,14 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).catch(() => caches.match('index.html'))
-    );
+    e.respondWith(fetch(req).catch(() => caches.match('index.html')));
     return;
   }
   e.respondWith(
-    fetch(req)
-      .then(resp => {
-        const clone = resp.clone();
-        caches.open(CACHE_NAME).then(c => c.put(req, clone));
-        return resp;
-      })
-      .catch(() => caches.match(req))
+    fetch(req).then(resp => {
+      const clone = resp.clone();
+      caches.open(CACHE_NAME).then(c => c.put(req, clone));
+      return resp;
+    }).catch(() => caches.match(req))
   );
 });
