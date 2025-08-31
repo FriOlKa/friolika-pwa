@@ -13,6 +13,7 @@ let state = {
   spots: [],      // importierte + manuell hinzugefügte Punkte
   weather: null,
   filters: { kinderwagen:false, schattig:false, freistehen:false },
+  basecamps: []
 };
 
 const storage = {
@@ -108,8 +109,11 @@ function renderMap() {
   state.spots.forEach(s => {
     const m = L.marker([s.lat, s.lon]).addTo(markersLayer);
     const badges = badgeTextFor(s).map(b=>`<span class="badge">${b}</span>`).join(' ');
-    m.bindPopup(`<div class="card"><b>${s.name}</b><br/>${(s.details||'')}` +
-      `<div class="badges" style="margin-top:6px">${badges}</div></div>`);
+    const html = `<div class="card"><b>${escapeHtml(s.name)}</b><br/>${escapeHtml(s.details||'')}` +
+      `<div class="badges" style="margin-top:6px">${badges}</div>`+
+      `<div style="margin-top:8px"><button class="btn" onclick="Friolika.showDetail('${s.id}')">Details</button></div>`+
+      `</div>`;
+    m.bindPopup(html);
     m.setIcon(L.divIcon({className:'', html:`<div style="font-size:20px">${iconMap[s.category]||'📍'}</div>`}));
   });
   if (state.pos) {
@@ -172,9 +176,11 @@ function renderNearby() {
   in60.forEach(({s,d}) => {
     const li = document.createElement('li'); li.className='card';
     const badges = badgeTextFor(s).map(b=>`<span class="badge">${b}</span>`).join(' ');
-    li.innerHTML = `<b>${s.name}</b> <span class="badge">${s.category}</span> <span class="badge">${d.toFixed(1)} km</span>
+    li.innerHTML = `<b>${escapeHtml(s.name)}</b> <span class="badge">${s.category}</span> <span class="badge">${d.toFixed(1)} km</span>
       <div class="badges">${badges}</div>
-      <div class="muted">${s.details||''}</div>`;
+      <div class="muted">${escapeHtml(s.details||'')}</div>
+      <div style="margin-top:8px"><button class="btn" data-id="${s.id}">Details</button></div>`;
+    li.querySelector('button').addEventListener('click', () => Friolika.showDetail(s.id));
     list.appendChild(li);
   });
 }
@@ -184,7 +190,7 @@ function renderBasecamps() {
     const li = document.createElement('li'); li.className='card';
     li.innerHTML = `<b>Basecamp: ${b.label}</b> <span class="badge">Score ${b.score}</span>
       <ul style="margin:6px 0 8px 18px">${b.reasons.slice(0,3).map(r=>`<li>${r}</li>`).join('')}</ul>
-      <div class="badges">${(b.sample||[]).map(s=>`<span class="badge">${s.name}</span>`).join(' ')}</div>`;
+      <div class="badges">${(b.sample||[]).map(s=>`<span class="badge">${escapeHtml(s.name)}</span>`).join(' ')}</div>`;
     ul.appendChild(li);
   });
 }
@@ -203,6 +209,55 @@ function renderWeatherPanel() {
       </div>`).join('')
   }</div>`;
   next.innerHTML = `<div><b>Wohin weiter?</b><br/>Tipp: Suche windgeschützte Leeseiten (Buchten an der der Wind <i>ablandig</i> ist). Ich markiere Schnorchel/Angel-Spots mit passenden Badges.</div>`;
+}
+
+/* ---- Detail-Modal (Guide, Deeplinks) ---- */
+const Friolika = {
+  showDetail: (id) => {
+    const s = state.spots.find(x=>x.id===id);
+    if (!s) return;
+    $('#detail-title').textContent = s.name;
+    $('#detail-desc').textContent = s.details || '';
+    $('#detail-badges').innerHTML = badgeTextFor(s).map(b=>`<span class="badge">${b}</span>`).join(' ');
+    const apple = `http://maps.apple.com/?ll=${s.lat},${s.lon}&q=${encodeURIComponent(s.name)}`;
+    const google = `https://www.google.com/maps?q=${s.lat},${s.lon}(${encodeURIComponent(s.name)})`;
+    $('#open-apple').href = apple; $('#open-google').href = google;
+    $('#wiki').innerHTML = '<div class="msg">Lade Guide‑Information …</div>';
+    fetchGuide(s.name).then(html => { $('#wiki').innerHTML = html; }).catch(()=>{
+      $('#wiki').innerHTML = '<div class="msg">Keine Hintergrundinfos gefunden.</div>';
+    });
+    $('#detail-modal').classList.remove('hidden');
+  }
+};
+window.Friolika = Friolika;
+$('#detail-close').addEventListener('click', ()=>$('#detail-modal').classList.add('hidden'));
+$('#detail-modal').addEventListener('click', (e)=>{ if (e.target.id==='detail-modal') $('#detail-modal').classList.add('hidden'); });
+
+async function fetchGuide(name) {
+  // Versuche zuerst deutschsprachige Zusammenfassung, fallback englisch
+  const de = `https://de.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`;
+  const en = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`;
+  try {
+    const r = await fetch(de, {headers:{'accept':'application/json'}});
+    if (r.ok) {
+      const j = await r.json();
+      return wikiHtml(j, 'de');
+    }
+  } catch {}
+  try {
+    const r = await fetch(en, {headers:{'accept':'application/json'}});
+    if (r.ok) {
+      const j = await r.json();
+      return wikiHtml(j, 'en');
+    }
+  } catch {}
+  throw new Error('no summary');
+}
+function wikiHtml(j, lang) {
+  const title = j.title || 'Wikipedia';
+  const extract = j.extract || '';
+  const url = j.content_urls?.desktop?.page || (lang==='de'?`https://de.wikipedia.org/wiki/${encodeURIComponent(title)}`:`https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`);
+  return `<div><b>Guide</b><div style="margin-top:6px">${escapeHtml(extract)}</div><div style="margin-top:6px"><a href="${url}" target="_blank" rel="noopener">Mehr auf Wikipedia</a></div></div>`;
 }
 
 /* ---- Filter Badges ---- */
@@ -237,7 +292,7 @@ $('#btn-paste').addEventListener('click', async () => {
     if (spots.length===0) { $('#import-msg').textContent = 'Keine Koordinaten/Links erkannt. Bitte direkt Koordinaten einfügen (lat, lon).'; return; }
     mergeSpots(spots, 'Paste');
   } catch (e) {
-    $('#import-msg').textContent = 'Zugriff auf Zwischenablage nicht möglich. Kopiere & nutze „Manuell hinzufügen“.'';
+    $('#import-msg').textContent = 'Zugriff auf Zwischenablage nicht möglich. Kopiere & nutze „Manuell hinzufügen“.';
   }
 });
 
@@ -266,13 +321,20 @@ function renderSpotList() {
   const ul = $('#spot-list'); ul.innerHTML='';
   state.spots.forEach(s => {
     const li = document.createElement('li'); li.className='card';
-    li.innerHTML = `<b>${s.name}</b> <span class="badge">${s.category}</span>
-      <div class="muted">${s.details||''}</div>`;
+    li.innerHTML = `<b>${escapeHtml(s.name)}</b> <span class="badge">${s.category}</span>
+      <div class="muted">${escapeHtml(s.details||'')}</div>`;
     ul.appendChild(li);
   });
 }
 
 /* ---- Parser & Utils ---- */
+function sourceLabel(name) {
+  if (!name) return 'Import';
+  const lower = name.toLowerCase();
+  if (lower.endsWith('.gpx')) return 'GPX';
+  if (lower.endsWith('.csv')) return 'CSV';
+  return 'Import';
+}
 function importGPX(text) {
   const wptRe = /<wpt[^>]*lat="([^"]+)"[^>]*lon="([^"]+)"[^>]*>([\s\S]*?)<\/wpt>/g;
   const nameRe = /<name>([\s\S]*?)<\/name>/; const descRe = /<desc>([\s\S]*?)<\/desc>/;
@@ -288,7 +350,8 @@ function importGPX(text) {
   return out;
 }
 function importCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+  const lines = text.split(/?
+/).filter(l=>l.trim().length);
   const out = []; let header=false;
   if (/name.*lat.*lon/i.test(lines[0])) { header=true; }
   lines.forEach((l,i) => {
@@ -355,6 +418,7 @@ function gridAround(c, cellKm, radiusKm) {
   }
   return out;
 }
+function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 /* ---- Start ---- */
 document.addEventListener('DOMContentLoaded', () => {

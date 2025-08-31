@@ -1,4 +1,4 @@
-const CACHE_NAME = 'friolika-v1';
+const CACHE_NAME = 'friolika-v3';
 const ASSETS = [
   'index.html', 'styles.css', 'app.js', 'sw.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-icon-180.png'
@@ -16,14 +16,12 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  // App navigation: serve cached index.html
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).catch(() => caches.match('index.html'))
     );
     return;
   }
-  // Try network, then cache
   e.respondWith(
     fetch(req)
       .then(resp => {

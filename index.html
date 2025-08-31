@@ -67,6 +67,21 @@
     </section>
   </main>
 
+  <!-- Detail-Modal -->
+  <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="detail-close" title="Schließen">×</button>
+      <h2 id="detail-title">Spot</h2>
+      <div class="badges" id="detail-badges"></div>
+      <p id="detail-desc" class="muted"></p>
+      <div class="actions">
+        <a id="open-apple" class="btn" target="_blank" rel="noopener">In Apple Karten öffnen</a>
+        <a id="open-google" class="btn" target="_blank" rel="noopener">In Google Maps öffnen</a>
+      </div>
+      <div id="wiki" class="card" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
   <footer class="attribution">
     <small>© FriOlKa. Karten © OpenStreetMap-Mitwirkende. Wetter: Open‑Meteo. Inhalte: teils Wikipedia/Wikidata (CC‑BY‑SA).</small>
   </footer>
