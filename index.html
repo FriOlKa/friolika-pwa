@@ -26,40 +26,41 @@
   </header>
 
   <div id="error-banner" class="error hidden" role="alert"></div>
+  <div id="toast" class="toast" aria-live="polite"></div>
 
   <main>
     <section id="home" class="home" aria-label="Startkacheln">
       <div class="tiles">
-        <button class="tile" data-go="nearby">
+        <a class="tile" href="#nearby" data-go="nearby">
           <div class="tile-icon">📍</div>
           <div class="tile-title">Jetzt in der Nähe</div>
           <div class="tile-sub">Tipps im Umkreis</div>
-        </button>
-        <button class="tile" data-go="weather">
+        </a>
+        <a class="tile" href="#weather" data-go="weather">
           <div class="tile-icon">☀️</div>
           <div class="tile-title">Heute empfehle ich</div>
           <div class="tile-sub">Wetterbasierte Ideen</div>
-        </button>
-        <button class="tile" data-go="basecamps">
+        </a>
+        <a class="tile" href="#basecamps" data-go="basecamps">
           <div class="tile-icon">🏕️</div>
           <div class="tile-title">Basecamps</div>
           <div class="tile-sub">2–3 Tage bleiben</div>
-        </button>
-        <button class="tile" data-go="map">
+        </a>
+        <a class="tile" href="#map" data-go="map">
           <div class="tile-icon">🗺️</div>
           <div class="tile-title">Karte</div>
           <div class="tile-sub">Alles auf einen Blick</div>
-        </button>
-        <button class="tile" data-go="import">
+        </a>
+        <a class="tile" href="#import" data-go="import">
           <div class="tile-icon">📥</div>
           <div class="tile-title">Import/Export</div>
           <div class="tile-sub">Links, GPX/CSV</div>
-        </button>
-        <button class="tile" data-go="nearby" id="tile-food">
+        </a>
+        <a class="tile" href="#nearby" data-go="nearby" id="tile-food">
           <div class="tile-icon">🍽️</div>
           <div class="tile-title">Essen wie Einheimische</div>
           <div class="tile-sub">lokal & preiswert</div>
-        </button>
+        </a>
       </div>
     </section>
 
