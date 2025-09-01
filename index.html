@@ -11,17 +11,15 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/apple-icon-180.png" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRf0Xpc=" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <header class="app-header">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div class="title" aria-label="FriOlKa">FriOlKa</div>
-    </div>
+    <div class="brand"><div class="logo"></div><div class="title">FriOlKa</div></div>
     <div class="header-actions">
-      <span id="geo-state" class="pill" title="Standortstatus">Bereit</span>
-      <button id="btn-refresh" title="Standort aktualisieren" aria-label="Standort aktualisieren">🔄</button>
+      <span id="geo-state" class="pill">Bereit</span>
+      <label class="chip ghost" title="Ressourcen sparen"><input type="checkbox" id="cb-speed"/> Speed‑Modus</label>
+      <button id="btn-refresh" title="Standort aktualisieren">🔄</button>
     </div>
   </header>
 
@@ -31,36 +29,12 @@
   <main>
     <section id="home" class="home" aria-label="Startkacheln">
       <div class="tiles">
-        <a class="tile" href="#nearby" data-go="nearby">
-          <div class="tile-icon">📍</div>
-          <div class="tile-title">Jetzt in der Nähe</div>
-          <div class="tile-sub">Tipps im Umkreis</div>
-        </a>
-        <a class="tile" href="#weather" data-go="weather">
-          <div class="tile-icon">☀️</div>
-          <div class="tile-title">Heute empfehle ich</div>
-          <div class="tile-sub">Wetterbasierte Ideen</div>
-        </a>
-        <a class="tile" href="#basecamps" data-go="basecamps">
-          <div class="tile-icon">🏕️</div>
-          <div class="tile-title">Basecamps</div>
-          <div class="tile-sub">2–3 Tage bleiben</div>
-        </a>
-        <a class="tile" href="#map" data-go="map">
-          <div class="tile-icon">🗺️</div>
-          <div class="tile-title">Karte</div>
-          <div class="tile-sub">Alles auf einen Blick</div>
-        </a>
-        <a class="tile" href="#import" data-go="import">
-          <div class="tile-icon">📥</div>
-          <div class="tile-title">Import/Export</div>
-          <div class="tile-sub">Links, GPX/CSV</div>
-        </a>
-        <a class="tile" href="#nearby" data-go="nearby" id="tile-food">
-          <div class="tile-icon">🍽️</div>
-          <div class="tile-title">Essen wie Einheimische</div>
-          <div class="tile-sub">lokal & preiswert</div>
-        </a>
+        <a class="tile" href="#nearby" data-go="nearby"><div class="tile-icon">📍</div><div class="tile-title">Jetzt in der Nähe</div><div class="tile-sub">Tipps im Umkreis</div></a>
+        <a class="tile" href="#weather" data-go="weather"><div class="tile-icon">☀️</div><div class="tile-title">Heute empfehle ich</div><div class="tile-sub">Wetterbasierte Ideen</div></a>
+        <a class="tile" href="#basecamps" data-go="basecamps"><div class="tile-icon">🏕️</div><div class="tile-title">Basecamps</div><div class="tile-sub">2–3 Tage bleiben</div></a>
+        <a class="tile" href="#map" data-go="map"><div class="tile-icon">🗺️</div><div class="tile-title">Karte</div><div class="tile-sub">Alles auf einen Blick</div></a>
+        <a class="tile" href="#import" data-go="import"><div class="tile-icon">📥</div><div class="tile-title">Import/Export</div><div class="tile-sub">Links, GPX/CSV</div></a>
+        <a class="tile" href="#nearby" data-go="nearby"><div class="tile-icon">🍽️</div><div class="tile-title">Essen wie Einheimische</div><div class="tile-sub">lokal & preiswert</div></a>
       </div>
     </section>
 
@@ -93,40 +67,23 @@
       <div id="diag" class="diag hidden"></div>
     </section>
 
-    <section id="tab-map" class="tab" aria-label="Karte">
-      <div id="map" class="map" role="application" aria-label="Karte"></div>
-    </section>
-
-    <section id="tab-weather" class="tab" aria-label="Wetter">
-      <div id="weather"></div>
-      <div id="where-next" class="where-next"></div>
-    </section>
-
-    <section id="tab-basecamps" class="tab" aria-label="Basecamps">
-      <ul id="basecamp-list" class="list"></ul>
-    </section>
+    <section id="tab-map" class="tab" aria-label="Karte"><div id="map" class="map" role="application"></div></section>
+    <section id="tab-weather" class="tab" aria-label="Wetter"><div id="weather"></div><div id="where-next" class="where-next"></div></section>
+    <section id="tab-basecamps" class="tab" aria-label="Basecamps"><ul id="basecamp-list" class="list"></ul></section>
 
     <section id="tab-import" class="tab" aria-label="Import/Export">
       <p><b>Importieren</b>: GPX/CSV oder einfach einen Link/Koordinaten <b>einfügen</b> (Apple/Google Maps, Park4Night, etc.).<br>
-      <b>Hinweis Park4Night</b>: Viele P4N-Links enthalten <i>keine</i> Koordinaten. Öffne den Spot in Park4Night → „In Karten öffnen“ → den Karten-Link hier einfügen.</p>
-      <div class="import-actions">
-        <input type="file" id="file-input" accept=".gpx,.csv,text/csv" />
-        <button id="btn-paste">Aus Zwischenablage einfügen</button>
-        <button id="btn-add-manual">Manuell hinzufügen</button>
-      </div>
-      <div class="export-actions">
-        <button id="btn-export-csv">Export CSV</button>
-        <button id="btn-export-gpx">Export GPX</button>
-      </div>
+      <b>Park4Night</b>: Wenn ein Spot‑Link keine Koordinaten hat, in P4N „In Karten öffnen“ wählen und den Karten‑Link hier einfügen.</p>
+      <div class="import-actions"><input type="file" id="file-input" accept=".gpx,.csv,text/csv" /><button id="btn-paste">Aus Zwischenablage einfügen</button><button id="btn-add-manual">Manuell hinzufügen</button></div>
+      <div class="export-actions"><button id="btn-export-csv">Export CSV</button><button id="btn-export-gpx">Export GPX</button></div>
       <div id="import-msg" class="msg" aria-live="polite"></div>
       <ul id="spot-list" class="list"></ul>
     </section>
   </main>
 
-  <!-- Detail-Modal -->
   <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="detail-title">
     <div class="modal-card">
-      <button class="modal-close" id="detail-close" title="Schließen">×</button>
+      <button class="modal-close" id="detail-close">×</button>
       <h2 id="detail-title">Spot</h2>
       <div class="badges" id="detail-badges"></div>
       <p id="detail-desc" class="muted"></p>
@@ -138,11 +95,9 @@
     </div>
   </div>
 
-  <footer class="attribution">
-    <small>© FriOlKa. Karten © OpenStreetMap‑Mitwirkende. Wetter: Open‑Meteo. Wikipedia/Wikidata (CC‑BY‑SA). Google‑Resultate über Deep‑Links.</small>
-  </footer>
+  <footer class="attribution"><small>© FriOlKa. Karten © OSM‑Mitwirkende. Wetter: Open‑Meteo. Google‑Ergebnisse via Deep‑Links.</small></footer>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
