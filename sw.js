@@ -1,4 +1,4 @@
-const CACHE_NAME = 'friolika-v8';
+const CACHE_NAME = 'friolika-v9';
 const ASSETS = [
   'index.html', 'styles.css', 'app.js', 'sw.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-icon-180.png'

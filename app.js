@@ -1,4 +1,4 @@
-/* FriOlKa PWA – v7 (Location-Fixes, kompakte Tiles, Safe-Area) */
+/* FriOlKa PWA – v8 (Tile→Empfehlungen, kompakt, Safe-Area, Location-fix) */
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -21,61 +21,29 @@ let state = {
   imported: [],        // user-importierte Spots
   quality: {},
   basecamps: [],
-  filters: { kinderwagen:false, schattig:false, freistehen:false, lokal:false, preiswert:false }
+  filters: { kinderwagen:false, schattig:false, freistehen:false, lokal:false, preiswert:false },
+  viewMode: 'recommendations' // 'recommendations' | 'list'
 };
 
 // Storage
-const storage = {
-  load(){ try{ const s=JSON.parse(localStorage.getItem('friolika-state')||'{}'); if(s.imported) state.imported=s.imported; }catch{} },
-  save(){ localStorage.setItem('friolika-state', JSON.stringify({ imported: state.imported })); }
-};
+const storage = { load(){ try{ const s=JSON.parse(localStorage.getItem('friolika-state')||'{}'); if(s.imported) state.imported=s.imported; }catch{} }, save(){ localStorage.setItem('friolika-state', JSON.stringify({ imported: state.imported })); } };
 storage.load();
 
 // Home tiles navigation
-$$('.tile').forEach(t=>t.addEventListener('click',()=>{ const tab = t.dataset.go; if (tab) activateTab(tab); }));
+$$('.tile').forEach(t=>t.addEventListener('click', async ()=>{ const tab = t.dataset.go; if (!tab) return; activateTab(tab); if (tab==='nearby'){ state.viewMode='recommendations'; await ensureLocationAndData(); renderNearby(); } }));
 
 // Tabs
-$$('.tabs button').forEach(btn => { btn.addEventListener('click', () => activateTab(btn.dataset.tab)); });
-function activateTab(tab){
-  $$('.tabs button').forEach(b=>b.classList.remove('active'));
-  const btn = document.querySelector(`.tabs button[data-tab="${tab}"]`); if (btn) btn.classList.add('active');
-  $$('.tab').forEach(t=>t.classList.remove('active'));
-  const pane = document.getElementById('tab-'+tab); if (pane) pane.classList.add('active');
-  if (tab==='map'){ initMapOnce(); setTimeout(renderMap,0); }
-}
+$$('.tabs button').forEach(btn => { btn.addEventListener('click', async () => { activateTab(btn.dataset.tab); if (btn.dataset.tab==='nearby'){ await ensureLocationAndData(); renderNearby(); } if (btn.dataset.tab==='map'){ initMapOnce(); setTimeout(renderMap,0); } }); });
+function activateTab(tab){ $$('.tabs button').forEach(b=>b.classList.remove('active')); const btn = document.querySelector(`.tabs button[data-tab="${tab}"]`); if (btn) btn.classList.add('active'); $$('.tab').forEach(t=>t.classList.remove('active')); const pane = document.getElementById('tab-'+tab); if (pane) pane.classList.add('active'); }
+
+async function ensureLocationAndData(){ if (!state.pos){ await getLocation(false); } if (state.pos && (!state.lastFetchPos || state.spots.length===0)){ await refreshAll(); state.lastFetchPos = {lat:state.pos.lat, lon:state.pos.lon}; } }
 
 // Standort & Auto-Refresh
 const refreshBtn = document.getElementById('btn-refresh'); if (refreshBtn) refreshBtn.addEventListener('click', ()=>getLocation(true));
 let refreshTimer = null;
 function startAutoRefresh(){ if (refreshTimer) clearInterval(refreshTimer); refreshTimer = setInterval(()=>{ if (document.visibilityState==='visible') getLocation(false); }, REFRESH_MINUTES*60*1000); }
 
-async function getLocation(watch=false){
-  if (!navigator.geolocation){ showError('Geolocation wird nicht unterstützt.'); setGeoState('Nicht unterstützt','err'); return; }
-  try{
-    setGeoState('Ortung…','wait'); refreshBtn && (refreshBtn.disabled=true);
-    await new Promise((resolve,reject)=>{
-      navigator.geolocation.getCurrentPosition(async (pos)=>{
-        const p = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy };
-        const movedKm = state.pos ? distKm(state.pos.lat,state.pos.lon,p.lat,p.lon) : 999;
-        state.pos = p; setGeoState('OK'); startAutoRefresh();
-        await ensureMap();
-        if (!state.lastFetchPos || movedKm>2){ await refreshAll(); state.lastFetchPos = p; }
-        renderAll();
-        if (watch){
-          navigator.geolocation.watchPosition(async (pp)=>{
-            const np = { lat: pp.coords.latitude, lon: pp.coords.longitude, acc: pp.coords.accuracy };
-            const mk = distKm(state.pos.lat,state.pos.lon,np.lat,np.lon);
-            state.pos = np; setGeoState('OK');
-            await ensureMap();
-            if (mk>2){ await refreshAll(); state.lastFetchPos=np; }
-            renderAll();
-          }, (err)=>{ showError(err.message); setGeoState('Fehler','err'); }, { enableHighAccuracy:true, maximumAge:10000, timeout:20000 });
-        }
-        resolve();
-      }, (err)=>{ showError('Standort nicht verfügbar: '+err.message); setGeoState('Fehler','err'); reject(err); }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 });
-    });
-  } finally { refreshBtn && (refreshBtn.disabled=false); }
-}
+async function getLocation(watch=false){ if (!navigator.geolocation){ showError('Geolocation wird nicht unterstützt.'); setGeoState('Nicht unterstützt','err'); return; } try{ setGeoState('Ortung…','wait'); refreshBtn && (refreshBtn.disabled=true); await new Promise((resolve,reject)=>{ navigator.geolocation.getCurrentPosition(async (pos)=>{ const p = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy }; const movedKm = state.pos ? distKm(state.pos.lat,state.pos.lon,p.lat,p.lon) : 999; state.pos = p; setGeoState('OK'); startAutoRefresh(); await ensureMap(); if (!state.lastFetchPos || movedKm>2){ await refreshAll(); state.lastFetchPos = p; } renderAll(); if (watch){ navigator.geolocation.watchPosition(async (pp)=>{ const np = { lat: pp.coords.latitude, lon: pp.coords.longitude, acc: pp.coords.accuracy }; const mk = distKm(state.pos.lat,state.pos.lon,np.lat,np.lon); state.pos = np; setGeoState('OK'); await ensureMap(); if (mk>2){ await refreshAll(); state.lastFetchPos=np; } renderAll(); }, (err)=>{ showError(err.message); setGeoState('Fehler','err'); }, { enableHighAccuracy:true, maximumAge:10000, timeout:20000 }); } resolve(); }, (err)=>{ showError('Standort nicht verfügbar: '+err.message); setGeoState('Fehler','err'); reject(err); }, { enableHighAccuracy:true, maximumAge:0, timeout:20000 }); }); } finally { refreshBtn && (refreshBtn.disabled=false); } }
 
 async function ensureMap(){ if (!map){ initMapOnce(); await new Promise(r=>setTimeout(r,0)); } }
 
@@ -123,12 +91,49 @@ let map, markersLayer, userMarker;
 function initMapOnce(){ if(map) return; if(!window.L){ showError('Kartenbibliothek nicht geladen'); return; } map=L.map('map'); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map); markersLayer=L.layerGroup().addTo(map); }
 function renderMap(){ if(!map) return; markersLayer.clearLayers(); const icons={culture:'🏛️',beach:'🏖️',hike:'🥾',swim:'💧',camperFree:'🚐',camperCampground:'⛺',restaurant:'🍽️',snorkel:'🤿',fishing:'🎣'}; state.spots.forEach(s=>{ const m=L.marker([s.lat,s.lon]).addTo(markersLayer); const badges = badgeTextFor(s).map(b=>`<span class="badge">${b}</span>`).join(' '); const html=`<div class="card"><b>${escapeHtml(s.name)}</b><br/>${escapeHtml(s.details||'')}<div class="badges" style="margin-top:6px">${badges}</div><div style="margin-top:8px"><button class="btn" onclick="Friolika.showDetail('${s.id}')">Details</button></div></div>`; m.bindPopup(html); m.setIcon(L.divIcon({className:'',html:`<div style="font-size:20px">${icons[s.category]||'📍'}</div>`})); }); if(state.pos){ if(!userMarker) userMarker=L.marker([state.pos.lat,state.pos.lon],{opacity:0.6}).addTo(map); else userMarker.setLatLng([state.pos.lat,state.pos.lon]); map.setView([state.pos.lat,state.pos.lon], 11, {animate:true}); } }
 
-// Nearby
+// Nearby (Recommendations + List)
 function badgeTextFor(s){ const arr=[]; if(s.category==='hike' && (s.estDurationMin||0)<=240) arr.push('Kraxe≤4h'); if(s.category==='beach' && s.hasShade) arr.push('Schatten'); if(s.category==='camperFree') arr.push('frei'); if(s.category==='snorkel') arr.push('🤿'); if(s.category==='fishing') arr.push('🎣'); if(s.category==='restaurant' && isLocalRestaurant(s)) arr.push('lokal'); if(s.category==='restaurant' && isBudgetRestaurant(s)) arr.push('€-€€'); return arr; }
-function qualityBadges(s){ const q=state.quality[s.id]||{}; let out=''; if((s.category==='snorkel'||s.category==='beach')){ if((q.snorkelScore||0)>=75) out+='<span class="badge">🤿 heute sehr gut</span>'; else if((q.snorkelScore||0)>=60) out+='<span class="badge">🤿 gut</span>'; } if((s.category==='fishing'||s.category==='beach') && (q.fishingScore||0)>=70) out+=' <span class="badge">🎣 gut</span>'; return out; }
-function renderNearby(){ const list=$('#nearby-list'); if(!list) return; list.innerHTML=''; if(!state.pos){ list.innerHTML='<li class="msg">Tippe 🔄 für Standort.</li>'; return; } const F=state.filters; let arr=state.spots.map(s=>({s, d: distKm(state.pos.lat,state.pos.lon,s.lat,s.lon)})).filter(o=>o.d<=60); arr=arr.filter(o=>{ const s=o.s; if(F.freistehen && s.category!=='camperFree') return false; if(F.kinderwagen && s.category==='hike' && (s.estDurationMin||999)>240) return false; if(F.schattig && s.category==='beach' && !s.hasShade) return false; if((F.lokal||F.preiswert)&&s.category==='restaurant'){ if(F.lokal && !isLocalRestaurant(s)) return false; if(F.preiswert && !isBudgetRestaurant(s)) return false; } return true; }).sort((a,b)=>a.d-b.d); if(!arr.length){ list.innerHTML='<li class="msg">Keine Spots im Umkreis (noch).</li>'; return; } arr.slice(0,50).forEach(({s,d})=>{ const li=document.createElement('li'); li.className='card'; const badges=badgeTextFor(s).map(b=>`<span class="badge">${b}</span>`).join(' '); const qual=qualityBadges(s); li.innerHTML = `<b>${escapeHtml(s.name)}</b> <span class="badge">${s.category}</span> <span class="badge">${d.toFixed(1)} km</span><div class="badges">${badges} ${qual}</div><div class="muted">${escapeHtml(s.details||'')}</div><div style="margin-top:8px"><button class="btn" data-id="${s.id}">Details</button></div>`; li.querySelector('button').addEventListener('click',()=>Friolika.showDetail(s.id)); list.appendChild(li); }); }
+function qualityBadgesPlain(s){ const q=state.quality[s.id]||{}; let arr=[]; if((s.category==='snorkel'||s.category==='beach')){ if((q.snorkelScore||0)>=75) arr.push('🤿 sehr gut'); else if((q.snorkelScore||0)>=60) arr.push('🤿 gut'); } if((s.category==='fishing'||s.category==='beach') && (q.fishingScore||0)>=70) arr.push('🎣 gut'); return arr; }
 
-// Basecamps etc.
+function renderNearby(){ const recoDiv=$('#nearby-reco'); const list=$('#nearby-list'); if(!recoDiv||!list) return; if(!state.pos){ recoDiv.innerHTML='<div class="msg">Tippe 🔄 für Standort.</div>'; list.style.display='none'; return; }
+  if(state.viewMode==='recommendations'){ list.style.display='none'; recoDiv.style.display='block'; recoDiv.innerHTML = buildRecommendationsHtml(); } else { recoDiv.style.display='none'; list.style.display='block'; buildListHtml(list); }
+}
+
+function buildRecommendationsHtml(){ const within=(km,cats=[])=>state.spots.filter(s=>distKm(state.pos.lat,state.pos.lon,s.lat,s.lon)<=km && (cats.length?cats.includes(s.category):true));
+  const distSort=(a,b)=> distKm(state.pos.lat,state.pos.lon,a.lat,a.lon) - distKm(state.pos.lat,state.pos.lon,b.lat,b.lon);
+  const topN=(arr,n)=>arr.slice(0,Math.max(0,n));
+  const restaurants = within(25,['restaurant']).filter(s=>isLocalRestaurant(s)&&isBudgetRestaurant(s)).sort(distSort);
+  const hikes = within(25,['hike']).filter(s=>(s.estDurationMin||0)<=240).sort(distSort);
+  const water = within(25,['beach','swim','snorkel']).sort((a,b)=> (state.quality[b.id]?.snorkelScore||0)-(state.quality[a.id]?.snorkelScore||0) || distSort(a,b));
+  const camper = within(30,['camperFree','camperCampground']).sort(distSort);
+  const culture = within(25,['culture']).sort(distSort);
+
+  const sec = (title, items)=>{
+    if(!items.length) return '';
+    const rows = topN(items,5).map(s=>{
+      const d=distKm(state.pos.lat,state.pos.lon,s.lat,s.lon).toFixed(1)+' km';
+      const badges = badgeTextFor(s).concat(qualityBadgesPlain(s));
+      return `<div class="item"><div class="lhs"><div class="name">${escapeHtml(s.name)}</div><div class="meta">${d} · ${escapeHtml(s.category)}</div><div class="badge-line">${badges.map(b=>`<span class=badge>${escapeHtml(b)}</span>`).join(' ')}</div></div><div class="actions"><button class="small-btn" onclick="Friolika.showDetail('${s.id}')">Details</button><a class="small-btn" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}&travelmode=driving" target="_blank" rel="noopener">Route</a></div></div>`;
+    }).join('');
+    return `<div class="section"><h3>${title}</h3>${rows}</div>`;
+  };
+
+  const parts = [
+    sec('🍽️ Restaurants (lokal & preiswert)', restaurants),
+    sec('🥾 Wanderungen (≤ 4 h, Kraxe)', hikes),
+    sec('🌊 Wasser & Schnorcheln', water),
+    sec('🚐 Stellplätze & Camping', camper),
+    sec('🏛️ Kultur & Sehenswürdigkeiten', culture)
+  ].filter(Boolean).join('');
+
+  const toggle = `<div class="toggle"><button class="small-btn" onclick="(function(){ state.viewMode='list'; renderNearby(); })()">Zur Listenansicht</button></div>`;
+  if(!parts) return '<div class="msg">Keine Empfehlungen im Umkreis. Tippe 🔄 oder verändere den Standort.</div>';
+  return parts + toggle;
+}
+
+function buildListHtml(list){ list.innerHTML=''; const F=state.filters; let arr=state.spots.map(s=>({s, d: distKm(state.pos.lat,state.pos.lon,s.lat,s.lon)})).filter(o=>o.d<=60); arr=arr.filter(o=>{ const s=o.s; if(F.freistehen && s.category!=='camperFree') return false; if(F.kinderwagen && s.category==='hike' && (s.estDurationMin||999)>240) return false; if(F.schattig && s.category==='beach' && !s.hasShade) return false; if((F.lokal||F.preiswert)&&s.category==='restaurant'){ if(F.lokal && !isLocalRestaurant(s)) return false; if(F.preiswert && !isBudgetRestaurant(s)) return false; } return true; }).sort((a,b)=>a.d-b.d); if(!arr.length){ list.innerHTML='<li class="msg">Keine Spots im Umkreis (noch).</li>'; return; } arr.slice(0,80).forEach(({s,d})=>{ const li=document.createElement('li'); li.className='card'; const badges=badgeTextFor(s).map(b=>`<span class="badge">${b}</span>`).join(' '); const q=qualityBadgesPlain(s).map(b=>`<span class="badge">${b}</span>`).join(' '); li.innerHTML = `<b>${escapeHtml(s.name)}</b> <span class="badge">${s.category}</span> <span class="badge">${d.toFixed(1)} km</span><div class="badges">${badges} ${q}</div><div class="muted">${escapeHtml(s.details||'')}</div><div style="margin-top:8px"><button class="btn" data-id="${s.id}">Details</button></div>`; li.querySelector('button').addEventListener('click',()=>Friolika.showDetail(s.id)); list.appendChild(li); }); const recoDiv=$('#nearby-reco'); const switcher=document.createElement('div'); switcher.className='toggle'; switcher.innerHTML='<button class="small-btn" onclick="(function(){ state.viewMode=\'recommendations\'; renderNearby(); })()">Zur Empfehlungsansicht</button>'; list.parentElement.insertBefore(switcher, list.nextSibling); }
+
+// Basecamps rendering
 function renderBasecamps(){ const ul=$('#basecamp-list'); if(!ul) return; ul.innerHTML=''; (state.basecamps||[]).forEach((b,i)=>{ const planId='plan-'+i; const li=document.createElement('li'); li.className='card'; li.innerHTML=`<b>Basecamp: ${b.label}</b> <span class="badge">Score ${b.score}</span><ul style="margin:6px 0 8px 18px">${b.reasons.slice(0,3).map(r=>`<li>${escapeHtml(r)}</li>`).join('')}</ul><div class="badges">${(b.sample||[]).map(s=>`<span class='badge'>${escapeHtml(s.name)}</span>`).join(' ')}</div><div style="margin-top:8px"><button class="btn" data-plan="${planId}">Tagespläne anzeigen</button></div><div id="${planId}" class="card" style="margin-top:8px; display:none;"></div>`; li.querySelector(`button[data-plan]`).addEventListener('click',(ev)=>{ const div=document.getElementById(planId); if(!div)return; const open = div.style.display!=='none'; if(open){ div.style.display='none'; ev.target.textContent='Tagespläne anzeigen'; } else { div.innerHTML = renderDayPlanHtml(b.plan); div.style.display='block'; ev.target.textContent='Tagespläne ausblenden'; } }); ul.appendChild(li); }); }
 function renderDayPlanHtml(days){ if(!days||!days.length) return '<div class="msg">Noch keine Vorschläge.</div>'; return days.map((d,i)=>{ const row=(l,s)=> s?`<div><b>${l}:</b> ${escapeHtml(s.name)}</div>`:''; return `<div style="margin-bottom:8px"><b>Tag ${i+1}</b>${row('Vormittag (Wasser)',d.morning)}${row('Mittag (Kultur)',d.noon)}${row('Nachmittag (kurze Wanderung)',d.afternoon)}${row('Abends (Taverne)',d.evening)}</div>`; }).join(''); }
 
@@ -136,7 +141,7 @@ function renderDayPlanHtml(days){ if(!days||!days.length) return '<div class="ms
 function renderWeatherPanel(){ const w=$('#weather'), next=$('#where-next'); if(!w||!next) return; if(!state.weather||!state.weather.daily){ w.innerHTML='<div class="msg">Warte auf Wetterdaten …</div>'; next.innerHTML=''; return; } const d=state.weather.daily; const days=(d.time||[]).slice(0,3); w.innerHTML = `<div class="card"><b>Wetter (3 Tage)</b>${days.map((date,i)=>`<div>${date}: max ${Math.round(d.temperature_2m_max[i])}°C, min ${Math.round(d.temperature_2m_min[i])}°C, Regen ${(d.precipitation_probability_max[i]||0)}%, Wind ${Math.round(d.wind_speed_10m_max[i]||0)} m/s</div>`).join('')}</div>`; next.innerHTML = `<div><b>Heute empfehle ich</b><br/>Suche windgeschützte Buchten bei stärkerem Wind (🤿). Für 🎣 sind 3–8 m/s oft gut. Ich markiere geeignete Spots mit Badges.</div>`; }
 
 // Detail + Routing
-const Friolika = { showDetail:(id)=>{ const s=(state.spots.find(x=>x.id===id)||state.imported.find(x=>x.id===id)); if(!s) return; $('#detail-title').textContent=s.name; $('#detail-desc').textContent=s.details||''; $('#detail-badges').innerHTML = badgeTextFor(s).map(b=>`<span class='badge'>${b}</span>`).join(' ') + ' ' + qualityBadges(s); $('#open-apple').href = `http://maps.apple.com/?daddr=${s.lat},${s.lon}&q=${encodeURIComponent(s.name)}`; $('#open-google').href = `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}&travelmode=driving`; const wikiBox=$('#wiki'); wikiBox.innerHTML='<div class="msg">Lade Guide‑Information …</div>'; fetchGuide(s.name).then(html=>wikiBox.innerHTML=html).catch(()=>wikiBox.innerHTML='<div class="msg">Keine Hintergrundinfos gefunden.</div>'); $('#detail-modal').classList.remove('hidden'); } };
+const Friolika = { showDetail:(id)=>{ const s=(state.spots.find(x=>x.id===id)||state.imported.find(x=>x.id===id)); if(!s) return; $('#detail-title').textContent=s.name; $('#detail-desc').textContent=s.details||''; const q=qualityBadgesPlain(s).map(b=>`<span class='badge'>${b}</span>`).join(' '); $('#detail-badges').innerHTML = badgeTextFor(s).map(b=>`<span class='badge'>${b}</span>`).join(' ') + ' ' + q; $('#open-apple').href = `http://maps.apple.com/?daddr=${s.lat},${s.lon}&q=${encodeURIComponent(s.name)}`; $('#open-google').href = `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}&travelmode=driving`; const wikiBox=$('#wiki'); wikiBox.innerHTML='<div class="msg">Lade Guide‑Information …</div>'; fetchGuide(s.name).then(html=>wikiBox.innerHTML=html).catch(()=>wikiBox.innerHTML='<div class="msg">Keine Hintergrundinfos gefunden.</div>'); $('#detail-modal').classList.remove('hidden'); } };
 window.Friolika = Friolika;
 const dc = document.getElementById('detail-close'); if (dc) dc.addEventListener('click',()=>document.getElementById('detail-modal').classList.add('hidden'));
 const dm = document.getElementById('detail-modal'); if (dm) dm.addEventListener('click',(e)=>{ if (e.target.id==='detail-modal') dm.classList.add('hidden'); });
@@ -156,7 +161,7 @@ function renderSpotList(){ const ul=document.getElementById('spot-list'); if(!ul
 
 function parseTextForSpots(t){ const out=[]; let m; const coords=/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/g; while((m=coords.exec(t))){ const lat=parseFloat(m[1]), lon=parseFloat(m[2]); out.push({ id: makeId(`${lat},${lon}`,lat,lon,'camperFree'), name:`Punkt ${lat.toFixed(4)},${lon.toFixed(4)}`, lat, lon, category:'camperFree', details:'aus Einfügen' }); } const ll=/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/g; while((m=ll.exec(t))){ const lat=parseFloat(m[1]), lon=parseFloat(m[2]); out.push({ id: makeId(`${lat},${lon}`,lat,lon,'camperFree'), name:`Karte ${lat.toFixed(4)},${lon.toFixed(4)}`, lat, lon, category:'camperFree', details:'aus Kartenlink' }); } const at=/@(-?\d+\.\d+),(-?\d+\.\d+)/g; while((m=at.exec(t))){ const lat=parseFloat(m[1]), lon=parseFloat(m[2]); out.push({ id: makeId(`${lat},${lon}`,lat,lon,'camperFree'), name:`Karte ${lat.toFixed(4)},${lon.toFixed(4)}`, lat, lon, category:'camperFree', details:'aus Kartenlink' }); } const p4n=/https?:\/\/park4night\.com\/[^\s]+/ig; while((m=p4n.exec(t))){ const url=m[0]; const latm=/[?&](lat|latitude)=(-?\d+\.\d+)/i.exec(url); const lonm=/[?&](lon|lng|longitude)=(-?\d+\.\d+)/i.exec(url); if(latm&&lonm){ const lat=parseFloat(latm[2]), lon=parseFloat(lonm[2]); out.push({ id: makeId(`P4N ${lat},${lon}`,lat,lon,'camperFree'), name:`P4N ${lat.toFixed(4)},${lon.toFixed(4)}`, lat, lon, category:'camperFree', details:'aus Park4Night-Link' }); } else { const msg = document.getElementById('import-msg'); if (msg && !parseTextForSpots._p4nWarned){ msg.textContent='P4N-Link ohne Koordinaten erkannt. Bitte in Park4Night „In Karten öffnen“ nutzen und den Karten-Link einfügen.'; parseTextForSpots._p4nWarned=true; } } } return out; }
 
-// Export
+// Export helpers
 function downloadFile(filename, content){ const blob=new Blob([content],{type:'text/plain;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
 function toCSV(spots){ const esc=(s)=>'"'+String(s||'').replace(/"/g,'""')+'"'; const rows=[['name','lat','lon','category','details']].concat(spots.map(s=>[s.name,s.lat,s.lon,s.category,s.details||''])); return rows.map(r=>r.map(esc).join(',')).join('\n'); }
 function toGPX(spots){ const header='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="FriOlKa" xmlns="http://www.topografix.com/GPX/1/1">'; const wpts=spots.map(s=>`<wpt lat="${s.lat}" lon="${s.lon}"><name>${escapeXml(s.name)}</name>${s.details?`<desc>${escapeXml(s.details)}</desc>`:''}</wpt>`).join(''); return header+wpts+'</gpx>'; }
@@ -170,8 +175,5 @@ function escapeHtml(s){ return String(s).replace(/[&<>"']/g, (c)=>({'&':'&amp;',
 function escapeXml(s){ return String(s||'').replace(/[<>&"']/g, (c)=>({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;','\'':'&apos;' }[c]||c)); }
 
 // Start
-document.addEventListener('DOMContentLoaded', async ()=>{
-  renderSpotList();
-  // Falls Geolocation-Berechtigung bereits erteilt wurde (nicht überall verfügbar): vorsichtig testen
-  try{ if (navigator.permissions && navigator.permissions.query){ const p = await navigator.permissions.query({name:'geolocation'}); if (p.state==='granted'){ getLocation(true); } } }catch{}
-});
+document.addEventListener('DOMContentLoaded', async ()=>{ renderSpotList(); // wenn Geolocation bereits erteilt: sofort loslegen
+  try{ if (navigator.permissions && navigator.permissions.query){ const p = await navigator.permissions.query({name:'geolocation'}); if (p.state==='granted'){ await ensureLocationAndData(); renderAll(); } } }catch{} });
