@@ -4,35 +4,73 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>FriOlKa | Der Reise-Agent</title>
-  <meta name="theme-color" content="#1b6bb3" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRf0Xpc=" crossorigin="" />
-  <link rel="icon" href="icons/icon-192.png" />
+  <meta name="theme-color" content="#16A34A" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/apple-icon-180.png" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRf0Xpc=" crossorigin="" />
 </head>
 <body>
   <header class="app-header">
-    <h1>FriOlKa | Der Reise-Agent</h1>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="title" aria-label="FriOlKa">FriOlKa</div>
+    </div>
     <div class="header-actions">
-      <button id="btn-refresh" title="Standort aktualisieren">🔄</button>
+      <button id="btn-refresh" title="Standort aktualisieren" aria-label="Standort aktualisieren">🔄</button>
     </div>
   </header>
 
-  <div id="error-banner" class="error hidden"></div>
-
-  <nav class="tabs">
-    <button data-tab="nearby" class="active">In der Nähe</button>
-    <button data-tab="map">Karte</button>
-    <button data-tab="weather">Wetter</button>
-    <button data-tab="basecamps">Basecamps</button>
-    <button data-tab="import">Import/Export</button>
-  </nav>
+  <div id="error-banner" class="error hidden" role="alert"></div>
 
   <main>
-    <section id="tab-nearby" class="tab active">
+    <section id="home" class="home" aria-label="Startkacheln">
+      <div class="tiles">
+        <button class="tile" data-go="nearby">
+          <div class="tile-icon">📍</div>
+          <div class="tile-title">Jetzt in der Nähe</div>
+          <div class="tile-sub">Tipps im Umkreis</div>
+        </button>
+        <button class="tile" data-go="weather">
+          <div class="tile-icon">☀️</div>
+          <div class="tile-title">Heute empfehle ich</div>
+          <div class="tile-sub">Wetterbasierte Ideen</div>
+        </button>
+        <button class="tile" data-go="basecamps">
+          <div class="tile-icon">🏕️</div>
+          <div class="tile-title">Basecamps</div>
+          <div class="tile-sub">2–3 Tage bleiben</div>
+        </button>
+        <button class="tile" data-go="map">
+          <div class="tile-icon">🗺️</div>
+          <div class="tile-title">Karte</div>
+          <div class="tile-sub">Alles auf einen Blick</div>
+        </button>
+        <button class="tile" data-go="import">
+          <div class="tile-icon">📥</div>
+          <div class="tile-title">Import/Export</div>
+          <div class="tile-sub">Links, GPX/CSV</div>
+        </button>
+        <button class="tile" data-go="nearby" id="tile-food">
+          <div class="tile-icon">🍽️</div>
+          <div class="tile-title">Essen wie Einheimische</div>
+          <div class="tile-sub">lokal & preiswert</div>
+        </button>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Navigation">
+      <button data-tab="nearby" class="active">In der Nähe</button>
+      <button data-tab="map">Karte</button>
+      <button data-tab="weather">Wetter</button>
+      <button data-tab="basecamps">Basecamps</button>
+      <button data-tab="import">Import/Export</button>
+    </nav>
+
+    <section id="tab-nearby" class="tab active" aria-label="In der Nähe">
       <div class="filters">
         <label><input type="checkbox" id="f-kinderwagen" /> kinderwagentaugliche Wege</label>
         <label><input type="checkbox" id="f-schattig" /> schattig</label>
@@ -43,21 +81,22 @@
       <ul id="nearby-list" class="list"></ul>
     </section>
 
-    <section id="tab-map" class="tab">
-      <div id="map" class="map"></div>
+    <section id="tab-map" class="tab" aria-label="Karte">
+      <div id="map" class="map" role="application" aria-label="Karte"></div>
     </section>
 
-    <section id="tab-weather" class="tab">
+    <section id="tab-weather" class="tab" aria-label="Wetter">
       <div id="weather"></div>
       <div id="where-next" class="where-next"></div>
     </section>
 
-    <section id="tab-basecamps" class="tab">
+    <section id="tab-basecamps" class="tab" aria-label="Basecamps">
       <ul id="basecamp-list" class="list"></ul>
     </section>
 
-    <section id="tab-import" class="tab">
-      <p>Importiere Punkte als GPX/CSV – oder füge durch <b>Einfügen</b> (Koordinaten/Link) hinzu. Exportiere deine Sammlung als CSV/GPX.</p>
+    <section id="tab-import" class="tab" aria-label="Import/Export">
+      <p><b>Importieren</b>: GPX/CSV oder einfach einen Link/Koordinaten <b>einfügen</b> (Apple/Google Maps, Park4Night, etc.).<br>
+      <b>Hinweis Park4Night</b>: Viele P4N-Links enthalten <i>keine</i> Koordinaten. Öffne den Spot in Park4Night → „In Karten öffnen“ → den Karten-Link hier einfügen.</p>
       <div class="import-actions">
         <input type="file" id="file-input" accept=".gpx,.csv,text/csv" />
         <button id="btn-paste">Aus Zwischenablage einfügen</button>
@@ -67,21 +106,21 @@
         <button id="btn-export-csv">Export CSV</button>
         <button id="btn-export-gpx">Export GPX</button>
       </div>
-      <div id="import-msg" class="msg"></div>
+      <div id="import-msg" class="msg" aria-live="polite"></div>
       <ul id="spot-list" class="list"></ul>
     </section>
   </main>
 
   <!-- Detail-Modal -->
-  <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="detail-title">
     <div class="modal-card">
       <button class="modal-close" id="detail-close" title="Schließen">×</button>
       <h2 id="detail-title">Spot</h2>
       <div class="badges" id="detail-badges"></div>
       <p id="detail-desc" class="muted"></p>
       <div class="actions">
-        <a id="open-apple" class="btn" target="_blank" rel="noopener">In Apple Karten öffnen</a>
-        <a id="open-google" class="btn" target="_blank" rel="noopener">In Google Maps öffnen</a>
+        <a id="open-apple" class="btn" target="_blank" rel="noopener">In Apple Karten routen</a>
+        <a id="open-google" class="btn" target="_blank" rel="noopener">In Google Maps routen</a>
       </div>
       <div id="wiki" class="card" style="margin-top:10px;"></div>
     </div>
