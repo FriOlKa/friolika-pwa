@@ -9,81 +9,80 @@
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/apple-icon-180.png" />
   <link rel="stylesheet" href="styles.css" />
+  <noscript><style>.nojs{display:block} .app{display:none}</style></noscript>
 </head>
 <body>
-  <header class="app-header">
-    <div class="brand"><div class="logo"></div><div class="title">FriOlKa</div></div>
-    <div class="header-actions">
-      <span id="geo-state" class="pill">Bereit</span>
-      <label class="chip ghost" title="Ressourcen sparen"><input type="checkbox" id="cb-speed"/> Speed-Modus</label>
-      <button id="btn-reset" class="chip ghost" title="Cache leeren & neu laden">Reset</button>
-      <button id="btn-refresh" title="Standort aktualisieren">Aktualisieren</button>
-    </div>
-  </header>
-
-  <div id="error-banner" class="error hidden" role="alert"></div>
-  <div id="perm-banner" class="perm hidden" role="region" aria-label="Standorthilfe"></div>
-  <div id="toast" class="toast" aria-live="polite"></div>
-
-  <main>
-    <section class="home">
-      <div class="tiles">
-        <a class="tile" href="#nearby" data-go="nearby"><div class="tile-title">Jetzt in der Nähe</div><div class="tile-sub">Tipps im Umkreis</div></a>
-        <a class="tile" href="#weather" data-go="weather"><div class="tile-title">Heute empfehle ich</div><div class="tile-sub">Wetterbasierte Ideen</div></a>
-        <a class="tile" href="#basecamps" data-go="basecamps"><div class="tile-title">Basecamps</div><div class="tile-sub">2–3 Tage bleiben</div></a>
-        <a class="tile" href="#map" data-go="map"><div class="tile-title">Karte</div><div class="tile-sub">Alles auf einen Blick</div></a>
-        <a class="tile" href="#import" data-go="import"><div class="tile-title">Import/Export</div><div class="tile-sub">Links, GPX/CSV</div></a>
-        <a class="tile" href="#search" data-go="nearby"><div class="tile-title">Essen wie Einheimische</div><div class="tile-sub">lokal & preiswert</div></a>
+  <div class="nojs" style="display:none;padding:10px;background:#FEF9C3;color:#4d4d0f;border-bottom:1px solid #fde68a">Hinweis: JavaScript ist deaktiviert oder blockiert. Die Kacheln funktionieren dann nicht. Bitte JavaScript erlauben.</div>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand"><div class="logo"></div><div class="title">FriOlKa</div></div>
+      <div class="header-actions">
+        <span id="geo-state" class="pill">Bereit</span>
+        <label class="chip ghost" title="Ressourcen sparen"><input type="checkbox" id="cb-speed"/> Speed-Modus</label>
+        <button id="btn-reset" class="chip ghost" title="Cache leeren & neu laden">Reset</button>
+        <button id="btn-refresh" title="Standort aktualisieren">Aktualisieren</button>
       </div>
-    </section>
+    </header>
 
-    <nav class="tabs" aria-label="Navigation">
-      <button data-tab="nearby" class="active">In der Nähe</button>
-      <button data-tab="map">Karte</button>
-      <button data-tab="weather">Wetter</button>
-      <button data-tab="basecamps">Basecamps</button>
-      <button data-tab="import">Import/Export</button>
-    </nav>
+    <div id="error-banner" class="error hidden" role="alert"></div>
+    <div id="perm-banner" class="perm hidden" role="region" aria-label="Standorthilfe"></div>
+    <div id="toast" class="toast" aria-live="polite"></div>
 
-    <section id="tab-nearby" class="tab active" aria-label="In der Nähe">
-      <div class="nearby-toolbar">
-        <div class="quick-search" id="quick-search"></div>
-        <div class="loc-tools">
-          <button id="btn-pick-location" class="chip">Ort wählen</button>
-          <label class="chip"><input type="checkbox" id="cb-demo"/> Demo-Modus</label>
-          <label class="chip"><input type="checkbox" id="cb-compact"/> Sehr kompakt</label>
-          <button id="btn-nettest" class="chip ghost">Netztest</button>
-          <button id="btn-grant" class="chip">Standort erlauben</button>
+    <main>
+      <section class="home">
+        <div class="tiles">
+          <!-- Wichtiger Fix: href zeigt jetzt auf bestehende IDs als Fallback, wenn JS nicht lädt. -->
+          <a class="tile" href="#tab-nearby" data-go="nearby"><div class="tile-title">Jetzt in der Nähe</div><div class="tile-sub">Tipps im Umkreis</div></a>
+          <a class="tile" href="#tab-weather" data-go="weather"><div class="tile-title">Heute empfehle ich</div><div class="tile-sub">Wetterbasierte Ideen</div></a>
+          <a class="tile" href="#tab-basecamps" data-go="basecamps"><div class="tile-title">Basecamps</div><div class="tile-sub">2–3 Tage bleiben</div></a>
+          <a class="tile" href="#tab-map" data-go="map"><div class="tile-title">Karte</div><div class="tile-sub">Alles auf einen Blick</div></a>
+          <a class="tile" href="#tab-import" data-go="import"><div class="tile-title">Import/Export</div><div class="tile-sub">Links, GPX/CSV</div></a>
+          <a class="tile" href="#tab-nearby" data-go="nearby"><div class="tile-title">Essen wie Einheimische</div><div class="tile-sub">lokal & preiswert</div></a>
         </div>
-      </div>
-      <div class="filters">
-        <label><input type="checkbox" id="f-kinderwagen" /> kinderwagentaugliche Wege</label>
-        <label><input type="checkbox" id="f-schattig" /> schattig</label>
-        <label><input type="checkbox" id="f-freistehen" /> freies Stehen</label>
-      </div>
-      <div id="nearby-reco" class="reco"></div>
-      <ul id="nearby-list" class="list" style="display:none"></ul>
-      <div id="diag" class="diag hidden"></div>
-    </section>
+      </section>
 
-    <section id="tab-map" class="tab" aria-label="Karte"><div id="map" class="map" role="application"></div></section>
-    <section id="tab-weather" class="tab" aria-label="Wetter"><div id="weather"></div></section>
-    <section id="tab-basecamps" class="tab" aria-label="Basecamps"><ul id="basecamp-list" class="list"></ul></section>
+      <nav class="tabs" aria-label="Navigation">
+        <button data-tab="nearby" class="active">In der Nähe</button>
+        <button data-tab="map">Karte</button>
+        <button data-tab="weather">Wetter</button>
+        <button data-tab="basecamps">Basecamps</button>
+        <button data-tab="import">Import/Export</button>
+      </nav>
 
-    <section id="tab-import" class="tab" aria-label="Import/Export">
-      <p><b>Importieren</b>: GPX/CSV oder einfach Links/Koordinaten einfügen (Apple/Google Maps, Park4Night, etc.).</p>
-      <div class="import-actions"><input type="file" id="file-input" accept=".gpx,.csv,text/csv" /><button id="btn-paste">Zwischenablage</button><button id="btn-add-manual">Manuell</button></div>
-      <div class="export-actions"><button id="btn-export-csv">Export CSV</button><button id="btn-export-gpx">Export GPX</button></div>
-      <div id="import-msg" class="msg" aria-live="polite"></div>
-      <ul id="spot-list" class="list"></ul>
-    </section>
-  </main>
+      <section id="tab-nearby" class="tab active" aria-label="In der Nähe">
+        <div class="nearby-toolbar">
+          <div class="quick-search" id="quick-search"></div>
+          <div class="loc-tools">
+            <button id="btn-pick-location" class="chip">Ort wählen</button>
+            <label class="chip"><input type="checkbox" id="cb-demo"/> Demo-Modus</label>
+            <label class="chip"><input type="checkbox" id="cb-compact"/> Sehr kompakt</label>
+            <button id="btn-nettest" class="chip ghost">Netztest</button>
+            <button id="btn-grant" class="chip">Standort erlauben</button>
+          </div>
+        </div>
+        <div id="nearby-reco" class="reco"></div>
+        <ul id="nearby-list" class="list" style="display:none"></ul>
+        <div id="diag" class="diag hidden"></div>
+      </section>
 
-  <footer class="attribution"><small>© FriOlKa. Karten © OSM-Mitwirkende. Wetter: Open-Meteo. Google-Ergebnisse via Deep-Links.</small></footer>
+      <section id="tab-map" class="tab" aria-label="Karte"><div id="map" class="map" role="application"></div></section>
+      <section id="tab-weather" class="tab" aria-label="Wetter"><div id="weather"></div></section>
+      <section id="tab-basecamps" class="tab" aria-label="Basecamps"><ul id="basecamp-list" class="list"></ul></section>
 
-  <!-- Leaflet nur laden, wenn vorhanden; initialisieren erst im Tab "Karte" -->
+      <section id="tab-import" class="tab" aria-label="Import/Export">
+        <p><b>Importieren</b>: GPX/CSV oder einfach Links/Koordinaten einfügen (Apple/Google Maps, Park4Night, etc.).</p>
+        <div class="import-actions"><input type="file" id="file-input" accept=".gpx,.csv,text/csv" /><button id="btn-paste">Zwischenablage</button><button id="btn-add-manual">Manuell</button></div>
+        <div class="export-actions"><button id="btn-export-csv">Export CSV</button><button id="btn-export-gpx">Export GPX</button></div>
+        <div id="import-msg" class="msg" aria-live="polite"></div>
+        <ul id="spot-list" class="list"></ul>
+      </section>
+    </main>
+
+    <footer class="attribution"><small>© FriOlKa. Karten © OSM-Mitwirkende. Wetter: Open-Meteo. Google-Ergebnisse via Deep-Links.</small></footer>
+  </div>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-  <script src="app.js"></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
