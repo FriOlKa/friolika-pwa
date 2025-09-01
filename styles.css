@@ -40,6 +40,11 @@ body { margin:0; font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-s
 .tab.active { display:block; }
 .map { height: calc(100vh - var(--top-ui) - 12px); border-radius:12px; overflow:hidden; }
 
+.nearby-toolbar { display:flex; gap:8px; flex-direction:column; margin-top:6px; }
+.quick-search { display:flex; gap:6px; flex-wrap:wrap; }
+.chip { background:#fff; border:1px solid #e2e8f0; border-radius:999px; padding:6px 10px; font-size:12px; color:#111; text-decoration:none; }
+.loc-tools { display:flex; gap:6px; flex-wrap:wrap; }
+
 .filters { display:flex; gap:10px; flex-wrap:wrap; margin:6px 0; }
 .list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
 .card { background:var(--card); border-radius:12px; padding:10px; box-shadow:0 1px 2px rgba(0,0,0,0.06); }
@@ -62,10 +67,15 @@ body { margin:0; font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-s
 .reco .badge-line { margin-top:4px; display:flex; gap:4px; flex-wrap:wrap; }
 .reco .toggle { margin-top:8px; }
 
-/* Modal */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; padding: 12px; z-index:100; }
-.modal.hidden { display:none; }
-.modal-card { width: 100%; max-width: 560px; background:#fff; border-radius:12px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
-.modal-close { float:right; border:none; background:transparent; font-size:24px; line-height:1; }
-.actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-.btn { background:var(--pri); color:#fff; text-decoration:none; padding:8px 10px; border-radius:8px; display:inline-block; }
+/* Diagnostics */
+.diag { margin-top:10px; background:#fff; border:1px dashed #94a3b8; border-radius:12px; padding:10px; color:#334155; }
+.diag pre { white-space: pre-wrap; font-size:12px; }
+
+/* Compact mode */
+body.compact .tile { padding:8px; border-radius:10px; }
+body.compact .tile-title { font-size:13px; }
+body.compact .tile-sub { font-size:10px; }
+body.compact .tabs { height:38px; }
+body.compact .tabs button { padding:5px 8px; font-size:12px; }
+body.compact .card { padding:8px; border-radius:10px; }
+body.compact .badge { font-size:11px; }

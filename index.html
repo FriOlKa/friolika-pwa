@@ -73,6 +73,14 @@
     </nav>
 
     <section id="tab-nearby" class="tab active" aria-label="In der Nähe">
+      <div class="nearby-toolbar">
+        <div class="quick-search" id="quick-search"></div>
+        <div class="loc-tools">
+          <button id="btn-pick-location" class="chip">📍 Ort wählen</button>
+          <label class="chip"><input type="checkbox" id="cb-demo"/> Demo‑Modus</label>
+          <label class="chip"><input type="checkbox" id="cb-compact"/> Sehr kompakt</label>
+        </div>
+      </div>
       <div class="filters">
         <label><input type="checkbox" id="f-kinderwagen" /> kinderwagentaugliche Wege</label>
         <label><input type="checkbox" id="f-schattig" /> schattig</label>
@@ -82,6 +90,7 @@
       </div>
       <div id="nearby-reco" class="reco"></div>
       <ul id="nearby-list" class="list" style="display:none"></ul>
+      <div id="diag" class="diag hidden"></div>
     </section>
 
     <section id="tab-map" class="tab" aria-label="Karte">
@@ -130,7 +139,7 @@
   </div>
 
   <footer class="attribution">
-    <small>© FriOlKa. Karten © OpenStreetMap-Mitwirkende. Wetter: Open‑Meteo. Inhalte: teils Wikipedia/Wikidata (CC‑BY‑SA).</small>
+    <small>© FriOlKa. Karten © OpenStreetMap‑Mitwirkende. Wetter: Open‑Meteo. Wikipedia/Wikidata (CC‑BY‑SA). Google‑Resultate über Deep‑Links.</small>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
