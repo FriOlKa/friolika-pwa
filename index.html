@@ -19,6 +19,7 @@
     <div class="header-actions">
       <span id="geo-state" class="pill">Bereit</span>
       <label class="chip ghost" title="Ressourcen sparen"><input type="checkbox" id="cb-speed"/> Speed‑Modus</label>
+      <button id="btn-reset" class="chip ghost" title="Cache leeren & neu laden">Reset</button>
       <button id="btn-refresh" title="Standort aktualisieren">🔄</button>
     </div>
   </header>
@@ -53,6 +54,7 @@
           <button id="btn-pick-location" class="chip">📍 Ort wählen</button>
           <label class="chip"><input type="checkbox" id="cb-demo"/> Demo‑Modus</label>
           <label class="chip"><input type="checkbox" id="cb-compact"/> Sehr kompakt</label>
+          <button id="btn-nettest" class="chip ghost">Netztest</button>
         </div>
       </div>
       <div class="filters">
@@ -72,8 +74,7 @@
     <section id="tab-basecamps" class="tab" aria-label="Basecamps"><ul id="basecamp-list" class="list"></ul></section>
 
     <section id="tab-import" class="tab" aria-label="Import/Export">
-      <p><b>Importieren</b>: GPX/CSV oder einfach einen Link/Koordinaten <b>einfügen</b> (Apple/Google Maps, Park4Night, etc.).<br>
-      <b>Park4Night</b>: Wenn ein Spot‑Link keine Koordinaten hat, in P4N „In Karten öffnen“ wählen und den Karten‑Link hier einfügen.</p>
+      <p><b>Importieren</b>: GPX/CSV oder einfach einen Link/Koordinaten <b>einfügen</b> (Apple/Google Maps, Park4Night, etc.).</p>
       <div class="import-actions"><input type="file" id="file-input" accept=".gpx,.csv,text/csv" /><button id="btn-paste">Aus Zwischenablage einfügen</button><button id="btn-add-manual">Manuell hinzufügen</button></div>
       <div class="export-actions"><button id="btn-export-csv">Export CSV</button><button id="btn-export-gpx">Export GPX</button></div>
       <div id="import-msg" class="msg" aria-live="polite"></div>
